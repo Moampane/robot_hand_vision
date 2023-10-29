@@ -2,8 +2,9 @@ import mediapipe as mp
 import cv2
 import os
 import pickle
-
 import matplotlib.pyplot as plt
+
+from helpers import get_max_dim, get_min_dim
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -25,9 +26,15 @@ for dir_ in os.listdir(DATA_DIR):
 
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                for i in range(len(hand_landmarks.landmark)):
-                        x = hand_landmarks.landmark[i].x
-                        y = hand_landmarks.landmark[i].y
+
+                x_min = get_min_dim(hand_landmarks, 'x')
+                y_min = get_min_dim(hand_landmarks, 'y')
+                x_max = get_max_dim(hand_landmarks, 'x')
+                y_max = get_max_dim(hand_landmarks, 'y')
+
+                for i in range(len(hand_landmarks.landmark)): 
+                        x = (hand_landmarks.landmark[i].x-x_min)/(x_max-x_min)
+                        y = (hand_landmarks.landmark[i].y-y_min)/(y_max-y_min)
                         data_aux.append(x)
                         data_aux.append(y)
             

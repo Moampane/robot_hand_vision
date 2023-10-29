@@ -2,11 +2,12 @@ import pickle
 import cv2
 import mediapipe as mp
 import numpy as np
+from helpers import get_max_dim, get_min_dim
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
-model_dict = pickle.load(open('./model.p', 'rb'))
+model_dict = pickle.load(open('robot_hand_vision/robot_hand_vision/model.pickle', 'rb'))
 model = model_dict['model']
 
 cap = cv2.VideoCapture(0)
@@ -32,19 +33,22 @@ with mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence = 0.
                 for hand_landmarks in results.multi_hand_landmarks:
                     mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                 
+                    x_min = get_min_dim(hand_landmarks, 'x')
+                    y_min = get_min_dim(hand_landmarks, 'y')
+                    x_max = get_max_dim(hand_landmarks, 'x')
+                    y_max = get_max_dim(hand_landmarks, 'y')
+
                     for i in range(len(hand_landmarks.landmark)):
-                        x = hand_landmarks.landmark[i].x
-                        y = hand_landmarks.landmark[i].y
+                        x = (hand_landmarks.landmark[i].x-x_min)/(x_max-x_min)
+                        y = (hand_landmarks.landmark[i].y-y_min)/(y_max-y_min)
                         data_aux.append(x)
                         data_aux.append(y)
-                        x_.append(x)
-                        y_.append(y)
 
-                x1 = int(min(x_) * W)
-                y1 = int(min(y_) * H)
+                x1 = int(x_min * W)
+                y1 = int(y_min * H)
                 
-                x2 = int(max(x_) * W)
-                y2 = int(max(y_) * H)
+                x2 = int(x_max * W)
+                y2 = int(y_max * H)
 
                 try:
                     prediction = model.predict([np.asarray(data_aux)])
