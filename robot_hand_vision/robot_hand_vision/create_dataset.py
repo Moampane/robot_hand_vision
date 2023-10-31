@@ -25,18 +25,19 @@ for dir_ in os.listdir(DATA_DIR):
         results = hands.process(img_rgb)
 
         if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
+            # for hand_landmarks in results.multi_hand_landmarks: # for multiple hands
+            hand_landmarks = results.multi_hand_landmarks[0] # for one hand
 
-                x_min = get_min_dim(hand_landmarks, 'x')
-                y_min = get_min_dim(hand_landmarks, 'y')
-                x_max = get_max_dim(hand_landmarks, 'x')
-                y_max = get_max_dim(hand_landmarks, 'y')
+            x_min = get_min_dim(hand_landmarks, 'x')
+            y_min = get_min_dim(hand_landmarks, 'y')
+            x_max = get_max_dim(hand_landmarks, 'x')
+            y_max = get_max_dim(hand_landmarks, 'y')
 
-                for i in range(len(hand_landmarks.landmark)): 
-                        x = (hand_landmarks.landmark[i].x-x_min)/(x_max-x_min)
-                        y = (hand_landmarks.landmark[i].y-y_min)/(y_max-y_min)
-                        data_aux.append(x)
-                        data_aux.append(y)
+            for i in range(len(hand_landmarks.landmark)): 
+                    x = (hand_landmarks.landmark[i].x-x_min)/(x_max-x_min)
+                    y = (hand_landmarks.landmark[i].y-y_min)/(y_max-y_min)
+                    data_aux.append(x)
+                    data_aux.append(y)
             
             data.append(data_aux)
             labels.append(dir_)
