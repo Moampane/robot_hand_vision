@@ -7,7 +7,7 @@ from helpers import get_max_dim, get_min_dim
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
-model_dict = pickle.load(open("robot_hand_vision/robot_hand_vision/model.pickle", "rb"))
+model_dict = pickle.load(open("new_model.p", "rb"))
 model = model_dict["model"]
 
 gesture_threshold = 0.1
