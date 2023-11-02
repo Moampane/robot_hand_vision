@@ -20,8 +20,8 @@ class HandStateController(Node):
     def __init__(self, image_topic):
         super().__init__('hand_state_controller')
         # create bridge between OpenCV and ROS ----------------------
-        self.cv_image = None
         self.bridge = CvBridge()
+        self.cv_image = None
         # create subscriptions and publishers -----------------------
         self.create_subscription(Image, image_topic, self.process_image, 10)
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
@@ -30,7 +30,7 @@ class HandStateController(Node):
         thread = Thread(target=self.loop_wrapper)
         thread.start()
         #global teleop variables ------------------------------------
-        self.teleop_direction = {0: 0.3, 1: -0.3, 2: 0}
+        self.teleop_direction = {1: 0.3, 2: -0.3, 5: 0.0}
         self.run_teleop = False
 
         #global spin variables --------------------------------------
@@ -42,7 +42,7 @@ class HandStateController(Node):
         self.cap = cv2.VideoCapture(0)
 
         #Hand Classification Variables -------------------------------
-        self.hand_prediction = None
+        self.hand_prediction = 5
 
     def process_image(self, msg):
         """Process image messages from ROS and stash them in an attribute
@@ -54,11 +54,13 @@ class HandStateController(Node):
         We are using a separate thread to run the loop_wrapper to work around
         issues with single threaded executors in ROS2"""
         cv2.namedWindow("video_window")
+        self.msg = Twist()
         while True:
             self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
             print(self.hand_prediction)
+            self.msg.linear.x = self.teleop()
             self.run_loop()
-            time.sleep(0.1)
+            time.sleep(0.02)
     
     def classify_hand(self, mp_drawing=mp.solutions.drawing_utils, mp_hands=mp.solutions.hands, model_dict=None, gesture_threshold=0.1, cap=None):
         model = model_dict['model']
@@ -73,7 +75,7 @@ class HandStateController(Node):
         7: "P-Following",
         8: "Gojo",
         }
-        with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
+        with mp_hands.Hands(min_detection_confidence=0.6, min_tracking_confidence=0.4) as hands:
             data_aux = []
             x_ = []
             y_ = []
@@ -172,6 +174,14 @@ class HandStateController(Node):
             return min([landmark.y for landmark in hand.landmark])
         elif dim == 'x':
             return min([landmark.x for landmark in hand.landmark])
+    
+    def teleop(self):
+        if self.hand_prediction in self.teleop_direction.keys():
+            direction = self.teleop_direction[self.hand_prediction]
+        else:
+            direction = 0.0
+
+        return direction
 
     def robot_angle(self, msg):
         """
@@ -182,6 +192,7 @@ class HandStateController(Node):
 
     
     def run_loop(self):
+        self.vel_pub.publish(self.msg)
         if not self.cv_image is None:
             cv2.imshow("video_window", self.cv_image)
             cv2.waitKey(5)
