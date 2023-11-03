@@ -56,7 +56,8 @@ class HandStateController(Node):
         cv2.namedWindow("video_window")
         self.msg = Twist()
         while True:
-            self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
+            self.msg.angular.z = 0.0
+            self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
             print(self.hand_prediction)
             self.msg.linear.x = self.teleop()
             self.run_loop()
@@ -176,7 +177,10 @@ class HandStateController(Node):
             return min([landmark.x for landmark in hand.landmark])
     
     def teleop(self):
-        if self.hand_prediction in self.teleop_direction.keys():
+        if self.hand_prediction == 6:
+            self.msg.angular.z = 0.3
+            direction = 0.05
+        elif self.hand_prediction in self.teleop_direction.keys():
             direction = self.teleop_direction[self.hand_prediction]
         else:
             direction = 0.0
