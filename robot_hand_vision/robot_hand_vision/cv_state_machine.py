@@ -30,8 +30,9 @@ class HandStateController(Node):
         thread = Thread(target=self.loop_wrapper)
         thread.start()
         #global teleop variables ------------------------------------
-        self.teleop_direction = {1: 0.3, 2: -0.3, 5: 0.0}
+        self.teleop_direction = {1: 0.3, 2: -0.3, 3: 0.3, 4: -0.3, 5: 0.0}
         self.run_teleop = False
+        self.toggle_counter = 0 #counter to ensure that teleop pose is held for a minimum period prior to changing mode.
 
         #global spin variables --------------------------------------
         self.spin_angle = 360
@@ -43,6 +44,7 @@ class HandStateController(Node):
 
         #Hand Classification Variables -------------------------------
         self.hand_prediction = 5
+        self.prev_prediction = None
 
     def process_image(self, msg):
         """Process image messages from ROS and stash them in an attribute
@@ -57,9 +59,23 @@ class HandStateController(Node):
         self.msg = Twist()
         while True:
             self.msg.angular.z = 0.0
+            #Classify Hand Pose
             self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
             print(self.hand_prediction)
-            self.msg.linear.x = self.teleop()
+
+            #Keep count of the amount of times a gesture is repeated
+            if self.hand_prediction == self.prev_prediction:
+                self.toggle_counter += 1
+            else:
+                self.toggle_counter = 0
+
+            #If teleop toggle gesture has been held, toggle teleop
+            self.check_teleop_toggle()
+
+            #Run teleop code
+            if self.run_teleop:
+                self.msg.linear.x = self.teleop()
+            self.prev_prediction = self.hand_prediction
             self.run_loop()
             time.sleep(0.02)
     
@@ -177,15 +193,28 @@ class HandStateController(Node):
             return min([landmark.x for landmark in hand.landmark])
     
     def teleop(self):
-        if self.hand_prediction == 6:
-            self.msg.angular.z = 0.3
-            direction = 0.05
-        elif self.hand_prediction in self.teleop_direction.keys():
+        if self.hand_prediction in self.teleop_direction.keys():
             direction = self.teleop_direction[self.hand_prediction]
+            if direction == 1 or direction == 2:
+                self.msg.linear.x = direction
+            elif direction == 3 or direction == 4:
+                self.msg.angular.z = direction
+            else:
+                direction = 0.0
         else:
             direction = 0.0
 
         return direction
+    
+    def check_teleop_toggle(self):
+        if self.hand_prediction == 0 and self.toggle_counter >= 10:
+            if self.run_teleop is False:
+                self.run_teleop = True
+            else:
+                self.run_teleop = False
+
+            self.toggle_counter = 0
+
 
     def robot_angle(self, msg):
         """
