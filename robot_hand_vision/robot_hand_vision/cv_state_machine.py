@@ -208,14 +208,12 @@ class HandStateController(Node):
         print(self.msg.linear.x)
     
     def check_teleop_toggle(self):
-        if self.hand_prediction == 0 and self.toggle_counter >= 10:
+        if self.hand_prediction == 0 and self.toggle_counter == 10:
             if self.run_teleop is False:
                 self.run_teleop = True
-                print("teleop toggled")
             else:
                 self.run_teleop = False
-
-            self.toggle_counter = 0
+            print(self.run_teleop)
 
 
     def robot_angle(self, msg):
