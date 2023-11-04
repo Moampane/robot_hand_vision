@@ -58,10 +58,8 @@ class HandStateController(Node):
         cv2.namedWindow("video_window")
         self.msg = Twist()
         while True:
-            self.msg.angular.z = 0.0
             #Classify Hand Pose
-            self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
-            print(self.hand_prediction)
+            self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
 
             #Keep count of the amount of times a gesture is repeated
             if self.hand_prediction == self.prev_prediction:
@@ -73,8 +71,9 @@ class HandStateController(Node):
             self.check_teleop_toggle()
 
             #Run teleop code
-            if self.run_teleop:
-                self.msg.linear.x = self.teleop()
+            print(self.run_teleop)
+            if self.run_teleop is True:
+                self.teleop()
             self.prev_prediction = self.hand_prediction
             self.run_loop()
             time.sleep(0.02)
@@ -195,21 +194,24 @@ class HandStateController(Node):
     def teleop(self):
         if self.hand_prediction in self.teleop_direction.keys():
             direction = self.teleop_direction[self.hand_prediction]
-            if direction == 1 or direction == 2:
+            if self.hand_prediction == 1 or self.hand_prediction == 2:
                 self.msg.linear.x = direction
-            elif direction == 3 or direction == 4:
+            elif self.hand_prediction == 3 or self.hand_prediction == 4:
                 self.msg.angular.z = direction
             else:
-                direction = 0.0
+                self.msg.angular.z = 0.0
+                self.msg.linear.x = 0.0
         else:
-            direction = 0.0
+            self.msg.angular.z = 0.0
+            self.msg.linear.x = 0.0
 
-        return direction
+        print(self.msg.linear.x)
     
     def check_teleop_toggle(self):
         if self.hand_prediction == 0 and self.toggle_counter >= 10:
             if self.run_teleop is False:
                 self.run_teleop = True
+                print("teleop toggled")
             else:
                 self.run_teleop = False
 
