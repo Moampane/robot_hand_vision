@@ -30,9 +30,15 @@ Using collect.py we took 200 pictures of each gesture and saved the $(x,y)$ hand
 | :-------------------------------------------------------: |
 |              _Fig 3. Normalization equation_              |
 
-## Training The Classifier
+## The Classifier and Real Time Gesture Recognition
 
-Talk about going from random forest classifier to neural network?
+After collecting training data we had to decide what ML model would work best for this classification. We tried sci-kit learn's built in 'RandomForestClassifier()', 'MLPClassifier()', and 'KNeighborsClassifier()'. Using the 'MLPClassifier()' worked best for our application. The neural network we made had 3 hidden layers of size 100, 50, and 10, and went through 15 epochs. The k-nearest neighbors classifier used 10 nearest neighbors and appeared to always be 100% confident in its classification so it did not recognize the no gesture state well. We believe the neural network worked best because of our large training dataset, 200 data points per gesture or 1800 data points.
+
+For classifying a gesture in real time, one hand is recognized, the $(x,y)$ hand-knuckle coordinates are normalized, and a classification is made from the normalized data. There are 9 unique hand gesture classifications and the classifier recognizes when a gesture is not being made when it's less than 60% confident in it's prediction. To communicate what the robot is understanding, a label is shown above the user's hand indicating what the classifier predicts their gesture to be and how confident it is in it's prediction.
+
+| ![Geesture and no gesture recognition](img/gestures.gif) |
+| :------------------------------------------------------: |
+|    _Fig 4. Gif of Gesture and no gesture recognition_    |
 
 ## ROS2 Integration
 
