@@ -50,6 +50,8 @@ Add gifs of behaviors
 
 ## Challenges
 
+One challenge we faced was in the implementation of our hand gesture classifier. Figuring out how to collect our training data was difficult, learning how to use MediaPipe and sci-kit learn took a large amount of time (especially converting the hand-knuckle coordinates into a form that could be used by the classifier), and improving the performance of the classifier was a challenge.
+
 Location of camera, range of hand detection from camera...
 
 ## Stretch Goals
