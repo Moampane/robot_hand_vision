@@ -17,14 +17,17 @@ To recognize a single hand, we used Google's ML library [MediaPipe](https://deve
 MediaPipe's hand recognition algorithm represents a hand as 21 hand-knuckle $(x,y,z)$ coordinates in the image frame. Training the hand gesture classifier required creating a dataset of coordinates for each gesture.
 
 ![MediaPipe hand landmark diagram](img/hand_landmark.jpg)
+
 Fig 1. Diagram of a [MediaPipe](https://developers.google.com/mediapipe/solutions/vision/hand_landmarker) hand landmark
 
 Using collect.py we took 200 pictures of each gesture and saved the $(x,y)$ hand-knuckle coordinates of the recognized hand. To make our classifier position agnostic, we normalized the coordinates.
 
 ![Raw hand mesh and normalized hand mesh](img/normalization.gif)
+
 Fig 2. Gif of raw hand mesh (red) and normalized hand mesh (blue), normalized hand mesh values are from 0-1 but to be visible for the figure they are from 0-100
 
 ![Normalization equation](img/normalization_equation.jpg)
+
 Fig 3. Normalization equation
 
 ## Training The Classifier
