@@ -42,7 +42,32 @@ For classifying a gesture in real time, one hand is recognized, the $(x,y)$ hand
 
 ## ROS2 Integration
 
-Image message to opencv image
+Our ROS2 node generates a single subscriber and a single publisher. With this, the Node subscribes to the ROS2 Image topic, allowing it to access video footage from our Neato's camera, and publish velocity commands to the cmd_vel topic, allowing the Neato to be controlled based on processed image data.
+```mermaid
+flowchart TD
+A['cv_state_machine' Node]
+B[Image Subscriber]
+C[Velocity Publisher]
+D[image]
+E[cmd_vel]
+
+A -->|initializes|B
+A -->|initializes|C
+B -->|subscribes|D
+C -->|publishes|E
+```
+*Fig 5. The cv_state_machine node's Subscriber and Publisher Structure*
+
+However, OpenCV cannot proccess data from the ROS2 Image topic directly. To amend this, cv_bridge is used to convert the images into Numpy arrays readable by OpenCV.
+```mermaid
+flowchart TD
+A[Image Topic]
+B[OpenCV]
+
+A -->|cv_bridge|B
+```
+*Fig 6. Image Topic to OpenCV Conversion*
+
 
 ## Behavior Implementation
 
