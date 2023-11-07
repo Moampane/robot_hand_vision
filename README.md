@@ -68,6 +68,40 @@ A -->|cv_bridge|B
 ```
 *Fig 6. Image Topic to OpenCV Conversion*
 
+## Behavior Implementation
+
+The primary implemented behavior is a teleop implementation toggled with gestural control. Initially, the Neato is in a "locked" state, where the teleop gestures don't actually trigger any behavior. By using the "toggle teleop" gesture, teleop is enabled and the Neato will respond to gestural control. This added layer of toggling ensures that the Neato won't be accidentally toggled by user inputs. Other inputs seperate from Teleop can still be triggered, regardless of Teleop's current state.
+The behavior tree is as follows:
+```mermaid
+flowchart TD
+A[Teleop Gesture]
+B[Secondary Gesture]
+C[Tertiary Gesture]
+D[Drive Forward]
+E[Drive Backward]
+F[Stop]
+G[Turn Right]
+H[Turn Left]
+I[Loop]
+J[Process Gesture]
+
+J -->A
+A -->|Toggle Teleop|D
+A -->|Toggle Teleop|E
+A -->|Toggle Teleop|F
+A -->|Toggle Teleop|G
+A -->|Toggle Teleop|H
+B -->|Secondary Behavior|I
+C -->|Tertiary Behavior|I
+A -->|Toggle Teleop|I
+J -->B
+J -->C
+D -->I
+E -->I
+F -->I
+G -->I
+H -->I
+```
 
 ## Behavior Implementation
 
