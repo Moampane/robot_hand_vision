@@ -111,6 +111,17 @@ class HandStateController(Node):
         gesture_threshold=0.1,
         cap=None,
     ):
+        """
+        Classifies a recognized hand as a hand gesture and sets class variable hand_prediction to the classified index.
+
+        Args:
+            mp_drawing (drawing_utils): Class used to draw in hand landmarks and connections.
+            mp_hands (hands): Class that stores hand landmarks and connections.
+            model_dict (dictionary): A dictionary containing the trained hand gesture classification model.
+            gesture_threshold (float): A float determining how confident the model needs to be for a classification.
+            cap (VideoCapture): Neato's video.
+
+        """
         model = model_dict["model"]
         labels_dict = {
             0: "Tog-Teleop",
