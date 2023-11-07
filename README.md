@@ -56,4 +56,8 @@ Location of camera, range of hand detection from camera...
 
 ## Stretch Goals
 
+One of our stretch goals was implementing text to speech. We were successful, and as a result, controlling the Neato without the classified label from the laptop screen is significantly easier. Also, one easter egg behavior is a relevant sound clip.
+
 ## Learnings
+
+Ultimately we learned how to successfully use CV to implement a hand gesture classifier to control a finite state machine. This included learning when to use different ML models, how to train and optimize them, and data preprocessing. Also, creating a more complex finite state machine reinforced our understanding of ROS2.
