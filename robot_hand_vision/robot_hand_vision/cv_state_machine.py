@@ -11,6 +11,9 @@ import cv2
 import math
 from cv_bridge import CvBridge
 import time
+from gtts import gTTS
+import os
+from playsound import playsound
 
 
 class HandStateController(Node):
@@ -29,6 +32,8 @@ class HandStateController(Node):
         #create a thread to run the run loop on ---------------------
         thread = Thread(target=self.loop_wrapper)
         thread.start()
+        soundthread = Thread(target=self.play_sound)
+        soundthread.start()
         #global teleop variables ------------------------------------
         self.teleop_direction = {1: 0.3, 2: -0.3, 3: 0.3, 4: -0.3, 5: 0.0}
         self.run_teleop = False
@@ -45,6 +50,17 @@ class HandStateController(Node):
         #Hand Classification Variables -------------------------------
         self.hand_prediction = 5
         self.prev_prediction = None
+        self.action_text = {
+        0: "Toggling Teleop, Save Driving!",
+        1: "Moving Forward",
+        2: "Moving Backwards",
+        3: "Turning Right",
+        4: "Turning Left",
+        5: "Stop",
+        6: "Now Spinning",
+        7: "I Love Daft Punk. Activating the jukebox!",
+        8: "Gojo",
+        }
 
     def process_image(self, msg):
         """Process image messages from ROS and stash them in an attribute
@@ -71,9 +87,13 @@ class HandStateController(Node):
             self.check_teleop_toggle()
 
             #Run teleop code
-            print(self.run_teleop)
             if self.run_teleop is True:
                 self.teleop()
+            if self.hand_prediction == 8 and self.toggle_counter == 20:
+                self.play_sound(self.hand_prediction)
+            if self.hand_prediction == 7 and self.toggle_counter == 20:
+                self.play_sound(self.hand_prediction)
+            
             self.prev_prediction = self.hand_prediction
             self.run_loop()
             time.sleep(0.02)
@@ -195,26 +215,31 @@ class HandStateController(Node):
         if self.hand_prediction in self.teleop_direction.keys():
             direction = self.teleop_direction[self.hand_prediction]
             if self.hand_prediction == 1 or self.hand_prediction == 2:
-                self.msg.linear.x = direction
+                if self.toggle_counter == 10:
+                    self.msg.linear.x = direction
+                    self.play_sound(self.hand_prediction)
             elif self.hand_prediction == 3 or self.hand_prediction == 4:
-                self.msg.angular.z = direction
+                if self.toggle_counter == 10:
+                    self.msg.angular.z = direction
+                    self.play_sound(self.hand_prediction)
             else:
-                self.msg.angular.z = 0.0
-                self.msg.linear.x = 0.0
+                if self.toggle_counter == 5:
+                    self.msg.angular.z = 0.0
+                    self.msg.linear.x = 0.0
+                    self.play_sound(self.hand_prediction)
         else:
             self.msg.angular.z = 0.0
             self.msg.linear.x = 0.0
 
-        print(self.msg.linear.x)
-    
+
     def check_teleop_toggle(self):
         if self.hand_prediction == 0 and self.toggle_counter == 10:
             if self.run_teleop is False:
                 self.run_teleop = True
+                self.play_sound(self.hand_prediction)
             else:
                 self.run_teleop = False
-            print(self.run_teleop)
-
+    
 
     def robot_angle(self, msg):
         """
@@ -223,6 +248,22 @@ class HandStateController(Node):
         w = msg.pose.pose.orientation.w
         self.crnt_angle = math.rad2deg(math.acos(w)*2)
 
+    def play_sound(self, hand_prediction):
+        print(hand_prediction)
+        language = 'en'
+        text = self.action_text[hand_prediction]
+        print(text)
+        txttospeech = gTTS(text=text, lang=language, slow=False, tld='ie')
+        txttospeech.save(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
+        if hand_prediction == 7:
+            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
+            playsound('src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/daft_punk.mp3',block=False)
+        elif hand_prediction == 8:
+            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
+            playsound('src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/domain.mp3',block=False)
+            print("this block")
+        else:
+            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3', block=False)
     
     def run_loop(self):
         self.vel_pub.publish(self.msg)
