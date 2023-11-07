@@ -12,7 +12,6 @@ import math
 from cv_bridge import CvBridge
 import time
 from gtts import gTTS
-import os
 from playsound import playsound
 
 
@@ -20,46 +19,47 @@ class HandStateController(Node):
     """
     A ROS2 Node that controls various Neato behavior based on hand signs.
     """
+
     def __init__(self, image_topic):
-        super().__init__('hand_state_controller')
+        super().__init__("hand_state_controller")
         # create bridge between OpenCV and ROS ----------------------
         self.bridge = CvBridge()
         self.cv_image = None
         # create subscriptions and publishers -----------------------
         self.create_subscription(Image, image_topic, self.process_image, 10)
-        self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.vel_pub = self.create_publisher(Twist, "cmd_vel", 10)
 
-        #create a thread to run the run loop on ---------------------
+        # create a thread to run the run loop on ---------------------
         thread = Thread(target=self.loop_wrapper)
         thread.start()
         soundthread = Thread(target=self.play_sound)
         soundthread.start()
-        #global teleop variables ------------------------------------
+        # global teleop variables ------------------------------------
         self.teleop_direction = {1: 0.3, 2: -0.3, 3: 0.3, 4: -0.3, 5: 0.0}
         self.run_teleop = False
-        self.toggle_counter = 0 #counter to ensure that teleop pose is held for a minimum period prior to changing mode.
+        self.toggle_counter = 0  # counter to ensure that teleop pose is held for a minimum period prior to changing mode.
 
-        #global spin variables --------------------------------------
+        # global spin variables --------------------------------------
         self.spin_angle = 360
         self.crnt_angle = None
-        #global person follow variables -----------------------------
+        # global person follow variables -----------------------------
 
-        #OpenCV variables -------------------------------------------
+        # OpenCV variables -------------------------------------------
         self.cap = cv2.VideoCapture(0)
 
-        #Hand Classification Variables -------------------------------
+        # Hand Classification Variables -------------------------------
         self.hand_prediction = 5
         self.prev_prediction = None
         self.action_text = {
-        0: "Toggling Teleop, Save Driving!",
-        1: "Moving Forward",
-        2: "Moving Backwards",
-        3: "Turning Right",
-        4: "Turning Left",
-        5: "Stop",
-        6: "Now Spinning",
-        7: "I Love Daft Punk. Activating the jukebox!",
-        8: "Gojo",
+            0: "Toggling Teleop, Save Driving!",
+            1: "Moving Forward",
+            2: "Moving Backwards",
+            3: "Turning Right",
+            4: "Turning Left",
+            5: "Stop",
+            6: "Now Spinning",
+            7: "I Love Daft Punk. Activating the jukebox!",
+            8: "Gojo",
         }
 
     def process_image(self, msg):
@@ -74,44 +74,58 @@ class HandStateController(Node):
         cv2.namedWindow("video_window")
         self.msg = Twist()
         while True:
-            #Classify Hand Pose
-            self.classify_hand(model_dict=pickle.load(open("src/robot_hand_vision/robot_hand_vision/new_model.p", "rb")), cap=self.cv_image)
+            # Classify Hand Pose
+            self.classify_hand(
+                model_dict=pickle.load(
+                    open("src/robot_hand_vision/robot_hand_vision/new_model.p", "rb")
+                ),
+                cap=self.cv_image,
+            )
 
-            #Keep count of the amount of times a gesture is repeated
+            # Keep count of the amount of times a gesture is repeated
             if self.hand_prediction == self.prev_prediction:
                 self.toggle_counter += 1
             else:
                 self.toggle_counter = 0
 
-            #If teleop toggle gesture has been held, toggle teleop
+            # If teleop toggle gesture has been held, toggle teleop
             self.check_teleop_toggle()
 
-            #Run teleop code
+            # Run teleop code
             if self.run_teleop is True:
                 self.teleop()
             if self.hand_prediction == 8 and self.toggle_counter == 20:
                 self.play_sound(self.hand_prediction)
             if self.hand_prediction == 7 and self.toggle_counter == 20:
                 self.play_sound(self.hand_prediction)
-            
+
             self.prev_prediction = self.hand_prediction
             self.run_loop()
             time.sleep(0.02)
-    
-    def classify_hand(self, mp_drawing=mp.solutions.drawing_utils, mp_hands=mp.solutions.hands, model_dict=None, gesture_threshold=0.1, cap=None):
-        model = model_dict['model']
+
+    def classify_hand(
+        self,
+        mp_drawing=mp.solutions.drawing_utils,
+        mp_hands=mp.solutions.hands,
+        model_dict=None,
+        gesture_threshold=0.1,
+        cap=None,
+    ):
+        model = model_dict["model"]
         labels_dict = {
-        0: "Tog-Teleop",
-        1: "Forward",
-        2: "Backwards",
-        3: "Right",
-        4: "Left",
-        5: "Stop",
-        6: "Spin",
-        7: "P-Following",
-        8: "Gojo",
+            0: "Tog-Teleop",
+            1: "Forward",
+            2: "Backwards",
+            3: "Right",
+            4: "Left",
+            5: "Stop",
+            6: "Spin",
+            7: "P-Following",
+            8: "Gojo",
         }
-        with mp_hands.Hands(min_detection_confidence=0.6, min_tracking_confidence=0.4) as hands:
+        with mp_hands.Hands(
+            min_detection_confidence=0.6, min_tracking_confidence=0.4
+        ) as hands:
             data_aux = []
             x_ = []
             y_ = []
@@ -121,7 +135,6 @@ class HandStateController(Node):
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             results = hands.process(frame_rgb)
-
 
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
@@ -196,21 +209,21 @@ class HandStateController(Node):
                     )
 
             cv2.imshow("Hand Gesture Classifier", frame)
-    
+
     # get max x or y dimension of a hand
-    def get_max_dim(self,hand, dim):
-        if dim == 'y':
+    def get_max_dim(self, hand, dim):
+        if dim == "y":
             return max([landmark.y for landmark in hand.landmark])
-        elif dim == 'x':
+        elif dim == "x":
             return max([landmark.x for landmark in hand.landmark])
-    
+
     # get min x or y dimension of a hand
-    def get_min_dim(self,hand, dim):
-        if dim == 'y':
+    def get_min_dim(self, hand, dim):
+        if dim == "y":
             return min([landmark.y for landmark in hand.landmark])
-        elif dim == 'x':
+        elif dim == "x":
             return min([landmark.x for landmark in hand.landmark])
-    
+
     def teleop(self):
         if self.hand_prediction in self.teleop_direction.keys():
             direction = self.teleop_direction[self.hand_prediction]
@@ -231,7 +244,6 @@ class HandStateController(Node):
             self.msg.angular.z = 0.0
             self.msg.linear.x = 0.0
 
-
     def check_teleop_toggle(self):
         if self.hand_prediction == 0 and self.toggle_counter == 10:
             if self.run_teleop is False:
@@ -239,32 +251,46 @@ class HandStateController(Node):
                 self.play_sound(self.hand_prediction)
             else:
                 self.run_teleop = False
-    
 
     def robot_angle(self, msg):
         """
         Converts the current angular pose of the robot to degrees.
         """
         w = msg.pose.pose.orientation.w
-        self.crnt_angle = math.rad2deg(math.acos(w)*2)
+        self.crnt_angle = math.rad2deg(math.acos(w) * 2)
 
     def play_sound(self, hand_prediction):
         print(hand_prediction)
-        language = 'en'
+        language = "en"
         text = self.action_text[hand_prediction]
         print(text)
-        txttospeech = gTTS(text=text, lang=language, slow=False, tld='ie')
-        txttospeech.save(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
+        txttospeech = gTTS(text=text, lang=language, slow=False, tld="ie")
+        txttospeech.save(
+            f"src/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3"
+        )
         if hand_prediction == 7:
-            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
-            playsound('src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/daft_punk.mp3',block=False)
+            playsound(
+                f"src/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3"
+            )
+            playsound(
+                "src/robot_hand_vision/robot_hand_vision/robot_hand_vision/daft_punk.mp3",
+                block=False,
+            )
         elif hand_prediction == 8:
-            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3')
-            playsound('src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/domain.mp3',block=False)
+            playsound(
+                f"src/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3"
+            )
+            playsound(
+                "src/robot_hand_vision/robot_hand_vision/robot_hand_vision/domain.mp3",
+                block=False,
+            )
             print("this block")
         else:
-            playsound(f'src/robot_hand_vision/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3', block=False)
-    
+            playsound(
+                f"src/robot_hand_vision/robot_hand_vision/robot_hand_vision/Sounds/{hand_prediction}.mp3",
+                block=False,
+            )
+
     def run_loop(self):
         self.vel_pub.publish(self.msg)
         if not self.cv_image is None:
@@ -272,12 +298,10 @@ class HandStateController(Node):
             cv2.waitKey(5)
 
 
-
-
-
 if __name__ == "__main__":
     node = HandStateController("/camera/image_raw")
     node.run()
+
 
 def main():
     """
@@ -285,7 +309,7 @@ def main():
     """
     rclpy.init()
 
-    handstate_publish = HandStateController('/camera/image_raw')
+    handstate_publish = HandStateController("/camera/image_raw")
     rclpy.spin(handstate_publish)
     handstate_publish.destroy_node()
     rclpy.shutdown()
