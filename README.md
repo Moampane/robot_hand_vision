@@ -111,7 +111,7 @@ Add gifs of behaviors
 
 One challenge we faced was in the implementation of our hand gesture classifier. Figuring out how to collect our training data was difficult, learning how to use MediaPipe and sci-kit learn took a large amount of time (especially converting the hand-knuckle coordinates into a form that could be used by the classifier), and improving the performance of the classifier was a challenge.
 
-Location of camera, range of hand detection from camera...
+Some pain points in the actual use of the system are the location of the camera and its limited range. Using the camera on the robot requires the user to be at the robot's level and to move around with it. The limited range of the camera can sometimes take the user by surprise when a gesture is not registered.
 
 ## Stretch Goals
 
