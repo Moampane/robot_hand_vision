@@ -102,10 +102,13 @@ F -->I
 G -->I
 H -->I
 ```
+| :-------------------------------------------------------: |
+|                 _Fig 7. Robot Behavior Tree_              |
+
 
 | ![Robot Teleop](img/robot_behavior.gif) |
 | :-------------------------------------------------------: |
-|       _Fig 7. Gif of robot's teleop control_              |
+|       _Fig 8. Gif of robot's teleop control_              |
 
 ## Challenges
 
