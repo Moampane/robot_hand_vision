@@ -103,9 +103,9 @@ G -->I
 H -->I
 ```
 
-## Behavior Implementation
-
-Add gifs of behaviors
+| ![Robot Teleop](img/robot_behavior.gif) |
+| :-------------------------------------------------------: |
+|       _Fig 7. Gif of robot's teleop control_              |
 
 ## Challenges
 
